@@ -31,6 +31,15 @@ export default function Home() {
             isDone: false,
             id: uuidv4(),
           };
+          if (newTask.taskName === "") {
+            alert("You cannot add empty task");
+            return;
+          }
+          const found = taskList.some((el) => el.taskName === newTask.taskName);
+          if (found) {
+            alert("You already have the same task on your list");
+            return;
+          }
           setTaskList([...taskList, newTask]);
           setTaskName("");
         }}
@@ -101,14 +110,14 @@ export default function Home() {
                   const updatedList = taskList.map((x) => {
                     if (x.id === task.id) {
                       return {
-                        ...task,
+                        ...x,
                         taskName: updatedTaskName,
                       };
                     }
-                    return task;
+                    return x;
                   });
+
                   setTaskList(updatedList);
-                  console.log(updatedTaskName);
                 }}
                 isDone={task.isDone}
                 onDone={() => {
@@ -116,6 +125,7 @@ export default function Home() {
                     if (x.id !== task.id) {
                       return x;
                     }
+
                     return {
                       ...x,
                       isDone: !x.isDone,
