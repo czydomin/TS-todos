@@ -5,6 +5,7 @@ import TopBar from "@/components/TopBar";
 import { useState } from "react";
 import { ListBulletIcon } from "@radix-ui/react-icons";
 import { v4 as uuidv4 } from "uuid";
+import Buttons from "@/components/Buttons";
 
 type Task = {
   taskName: string;
@@ -17,6 +18,61 @@ export default function Home() {
   const [taskName, setTaskName] = useState("");
   const [taskList, setTaskList] = useState<Task[]>([]);
 
+  function handleOnAdd() {
+    const newTask = {
+      taskName: taskName,
+      isDone: false,
+      id: uuidv4(),
+    };
+    if (newTask.taskName === "") {
+      alert("You cannot add empty task");
+      return;
+    }
+    const found = taskList.some((el) => el.taskName === newTask.taskName);
+    if (found) {
+      alert("You already have the same task on your list");
+      return;
+    }
+    setTaskList([...taskList, newTask]);
+    setTaskName("");
+  }
+
+  function handleOnUpdate(updatedTaskName: string, taskId: string) {
+    const updatedList = taskList.map((x) => {
+      if (x.id === taskId) {
+        return {
+          ...x,
+          taskName: updatedTaskName,
+        };
+      }
+      return x;
+    });
+
+    setTaskList(updatedList);
+  }
+
+  function handleOnDelete(taskId: string) {
+    const newList = taskList.filter((x) => {
+      return x.id !== taskId;
+    });
+    setTaskList(newList);
+  }
+
+  function handleOnDone(taskId: string) {
+    const updateList = taskList.map((x) => {
+      if (x.id !== taskId) {
+        return x;
+      }
+
+      return {
+        ...x,
+        isDone: !x.isDone,
+      };
+    });
+
+    setTaskList(updateList);
+  }
+
   return (
     <main className="flex items-center flex-col min-h-screen		 bg-blue-500">
       <h1 className="text-5xl mt-10 tracking-widest">TODO LIST</h1>
@@ -25,66 +81,11 @@ export default function Home() {
         onChange={(event) => {
           setTaskName(event.target.value);
         }}
-        onAdd={() => {
-          const newTask = {
-            taskName: taskName,
-            isDone: false,
-            id: uuidv4(),
-          };
-          if (newTask.taskName === "") {
-            alert("You cannot add empty task");
-            return;
-          }
-          const found = taskList.some((el) => el.taskName === newTask.taskName);
-          if (found) {
-            alert("You already have the same task on your list");
-            return;
-          }
-          setTaskList([...taskList, newTask]);
-          setTaskName("");
-        }}
+        onAdd={handleOnAdd}
       />
-
       <div className=" bg-white flex w-1/3 justify-between ">
         <ListBulletIcon className="text-blue-500 bg-white h-10 w-10 px-2" />
-        <div className="flex gap-2 px-2 ">
-          <button
-            onClick={() => {
-              setFilter("TODO");
-            }}
-            className={
-              filter === "TODO"
-                ? "text-white bg-blue-300 m-2 px-2"
-                : "text-blue-500 bg-white m-2 px-2"
-            }
-          >
-            TODO
-          </button>
-          <button
-            onClick={() => {
-              setFilter("DONE");
-            }}
-            className={
-              filter === "DONE"
-                ? "text-white bg-blue-300 m-2 px-2"
-                : "text-blue-500 bg-white m-2 px-2"
-            }
-          >
-            DONE
-          </button>
-          <button
-            onClick={() => {
-              setFilter("ALL");
-            }}
-            className={
-              filter === "ALL"
-                ? "text-white bg-blue-300 m-2 px-2"
-                : "text-blue-500 bg-white m-2 px-2"
-            }
-          >
-            ALL
-          </button>
-        </div>
+        <Buttons status={filter} setStatus={setFilter} />
       </div>
       <ul className="flex flex-col w-1/3">
         {taskList
@@ -106,40 +107,12 @@ export default function Home() {
           .map((task) => {
             return (
               <Item
-                onUpdate={(updatedTaskName) => {
-                  const updatedList = taskList.map((x) => {
-                    if (x.id === task.id) {
-                      return {
-                        ...x,
-                        taskName: updatedTaskName,
-                      };
-                    }
-                    return x;
-                  });
-
-                  setTaskList(updatedList);
-                }}
+                onUpdate={(updatedTaskName) =>
+                  handleOnUpdate(updatedTaskName, task.id)
+                }
                 isDone={task.isDone}
-                onDone={() => {
-                  const updateList = taskList.map((x) => {
-                    if (x.id !== task.id) {
-                      return x;
-                    }
-
-                    return {
-                      ...x,
-                      isDone: !x.isDone,
-                    };
-                  });
-
-                  setTaskList(updateList);
-                }}
-                onDelete={() => {
-                  const newList = taskList.filter((x) => {
-                    return x.id !== task.id;
-                  });
-                  setTaskList(newList);
-                }}
+                onDone={() => handleOnDone(task.id)}
+                onDelete={() => handleOnDelete(task.id)}
                 taskName={task.taskName}
                 key={task.taskName}
               />
